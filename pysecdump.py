@@ -215,11 +215,17 @@ def get_credman_creds(quiet=0):
     except pywintypes.error as e:
         if not quiet:
             if e.winerror == 1004:
-                print("[E] Call to CredEnumerate failed: Invalid flags.  This doesn't work on XP/2003.")
+                print(
+                    "[E] Call to CredEnumerate failed: Invalid flags.  This doesn't work on XP/2003."
+                )
             elif e.winerror == 1168:
-                print("[E] Call to CredEnumerate failed: Element not found.  No credentials stored for this user.  Run as normal user, not SYSTEM.")
+                print(
+                    "[E] Call to CredEnumerate failed: Element not found.  No credentials stored for this user.  Run as normal user, not SYSTEM."
+                )
             elif e.winerror == 1312:
-                print("[E] Call to CredEnumerate failed: No such login session.  Only works for proper login session - not network logons.")
+                print(
+                    "[E] Call to CredEnumerate failed: No such login session.  Only works for proper login session - not network logons."
+                )
             else:
                 print(f"[E] Call to CredEnumerate failed: {e}")
         return None
@@ -285,8 +291,10 @@ if options.do_all or options.do_credman:
             ret = xt.get_fq_name().encode()
         except pywintypes.error as e:
             pywintypes_errors = {5: 'Access Denied'}
-            print(f'Error: {pywintypes_errors.get(e.winerror, f"Unknown {e}")}')
+            print(
+                f'Error: {pywintypes_errors.get(e.winerror, f"Unknown {e}")}')
         return ret
+
     sid_done = {}
     for p in processes().get_all():
         for t in p.get_tokens():
@@ -295,7 +303,8 @@ if options.do_all or options.do_credman:
                 pass
             else:
                 sid_done[x] = 1
-                section("Dumping Credentials from Credential Manager for: %s" %x)
+                section("Dumping Credentials from Credential Manager for: %s" %
+                        x)
                 try:
                     win32security.ImpersonateLoggedOnUser(t.get_th())
                 except pywintypes.error as e:
