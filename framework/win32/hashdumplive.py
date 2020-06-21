@@ -57,8 +57,8 @@ p = [
 ]
 
 # Constants for SAM decrypt algorithm
-aqwerty = "!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%\0"
-anum = "0123456789012345678901234567890123456789\0"
+aqwerty = b"!@#$%^&*()qwertyUIOPAzxcvbnmQQQQQQQQQQQQ)(*@&%\0"
+anum = b"0123456789012345678901234567890123456789\0"
 antpassword = "NTPASSWORD\0"
 almpassword = "LMPASSWORD\0"
 
@@ -220,7 +220,7 @@ def dump_hashes():
         if not lmhash: lmhash = empty_lm
         if not nthash: nthash = empty_nt
         yield "%s:%d:%s:%s:::" % (get_user_name(user), int(
-            user, 16), lmhash.encode('hex'), nthash.encode('hex'))
+            user, 16), hexlify(lmhash).upper(), hexlify(nthash).upper())
 
 
 def get_hklm_class_(rk, value_name):

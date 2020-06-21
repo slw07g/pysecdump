@@ -212,20 +212,16 @@ def get_credman_creds(quiet=0):
     try:
         creds = win32cred.CredEnumerate(None, 0)
         return creds
-    except Exception as e:
-        print(f'CredEnumerate failed. {str(e)}')
-        #raise Exception(str(e))
-        '''
+    except pywintypes.error as e:
         if not quiet:
-            if e[0] == 1004:
+            if e.winerror == 1004:
                 print("[E] Call to CredEnumerate failed: Invalid flags.  This doesn't work on XP/2003.")
-            elif e[0] == 1168:
+            elif e.winerror == 1168:
                 print("[E] Call to CredEnumerate failed: Element not found.  No credentials stored for this user.  Run as normal user, not SYSTEM.")
-            elif e[0] == 1312:
+            elif e.winerror == 1312:
                 print("[E] Call to CredEnumerate failed: No such login session.  Only works for proper login session - not network logons.")
             else:
-                print("[E] Call to CredEnumerate failed: %s" % e[2])
-        '''
+                print(f"[E] Call to CredEnumerate failed: {e}")
         return None
 
 
@@ -282,18 +278,29 @@ if options.do_all or options.do_credman:
         for package in creds:
             dump_cred(package)
 
+    def get_token(t):
+        ret = None
+        try:
+            xt = t.get_token_user()
+            ret = xt.get_fq_name().encode()
+        except pywintypes.error as e:
+            pywintypes_errors = {5: 'Access Denied'}
+            print(f'Error: {pywintypes_errors.get(e.winerror, f"Unknown {e}")}')
+        return ret
     sid_done = {}
     for p in processes().get_all():
         for t in p.get_tokens():
-            x = t.get_token_user().get_fq_name().encode("utf8")
-            if t.get_token_user().get_fq_name().encode(
-                    "utf8") in sid_done.keys():
+            x = get_token(t)
+            if x in sid_done.keys():
                 pass
             else:
-                sid_done[t.get_token_user().get_fq_name().encode("utf8")] = 1
-                section("Dumping Credentials from Credential Manager for: %s" %
-                        t.get_token_user().get_fq_name())
-                win32security.ImpersonateLoggedOnUser(t.get_th())
+                sid_done[x] = 1
+                section("Dumping Credentials from Credential Manager for: %s" %x)
+                try:
+                    win32security.ImpersonateLoggedOnUser(t.get_th())
+                except pywintypes.error as e:
+                    if e.winerror == 5:
+                        continue
                 creds = get_credman_creds()
                 if creds:
                     for package in creds:
